@@ -3,7 +3,7 @@
   "name": "Random Shuffle Rems",
   "description": "Allows you to shuffle children of a Rem in a random order, just like the base app supports for alphabetical order.",
   "enableOnMobile": true,
-  "id": "HalfwayDead-dyto8hl",
+  "id": "random-shuffle",
   "manifestVersion": 1,
   "repoUrl": "https://github.com/OfficialHalfwayDead/remnote-random-shuffle",
   "version": {
