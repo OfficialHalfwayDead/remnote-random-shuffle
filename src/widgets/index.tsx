@@ -1,42 +1,73 @@
-import { declareIndexPlugin, ReactRNPlugin, WidgetLocation } from '@remnote/plugin-sdk';
-import '../style.css';
-import '../App.css';
+import {
+  declareIndexPlugin,
+  ReactRNPlugin,
+  Rem,
+  SelectionType,
+} from "@remnote/plugin-sdk";
 
 async function onActivate(plugin: ReactRNPlugin) {
-  // Register settings
-  await plugin.settings.registerStringSetting({
-    id: 'name',
-    title: 'What is your Name?',
-    defaultValue: 'Bob',
-  });
+  function shuffleArray(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+    }
+  }
 
-  await plugin.settings.registerBooleanSetting({
-    id: 'pizza',
-    title: 'Do you like pizza?',
-    defaultValue: true,
-  });
+  const selectAndShuffle = async () => {
+    const selection = await plugin.editor.getSelection();
+    if (!selection) {
+      return;
+    }
+    // get rem children of current item or selection of many rems
+    let rems: Rem[] = [];
+    if (selection.type === SelectionType.Text) {
+      const focusedRem = await plugin.focus.getFocusedRem();
+      if (!focusedRem) return;
+      rems = await focusedRem.getChildrenRem();
+    } else if (selection.type === SelectionType.Rem) {
+      rems = (await plugin.rem.findMany(selection.remIds)) || [];
+    }
+    if (rems.length < 2) return;
 
-  await plugin.settings.registerNumberSetting({
-    id: 'favorite-number',
-    title: 'What is your favorite number?',
-    defaultValue: 42,
-  });
+    const parent = await rems[0].getParentRem();
+    if (!parent) return;
 
-  // A command that inserts text into the editor if focused.
+    // build index array and shuffle
+    const shuffleIndex = [];
+    for (let i = 0; i < rems.length; i++) {
+      if (rems[i].parent !== parent._id) return; // can't sort if they're not all of the same parent
+      shuffleIndex[i] = i;
+    }
+    shuffleArray(shuffleIndex);
+
+    // in case selection is 5-10th child, we don't want to place them in 1st position
+    const positionOffset = (await rems[0].positionAmongstSiblings()) ?? 0;
+    Promise.all(shuffleIndex.map(async (shuffledIndex, unshuffled) => {
+      // console.log("shuffledIndex: %d, unshuffled: %d, text: %s", shuffledIndex, unshuffled, rems[shuffledIndex].text.toString());
+
+      // pick an item based on the shuffled index out of the rems, then put it into the first slot
+      // then do the same for the second slot. Since we start at index 0 and the slots are only dependent
+      // on the slots with lower indices, there are no interaction problems where inserting an item moves
+      // other already inserted items around
+      plugin.rem.moveRems(
+        [rems[shuffledIndex]],
+        parent,
+        positionOffset + unshuffled,
+      );
+    }));
+  };
+
   await plugin.app.registerCommand({
-    id: 'editor-command',
-    name: 'Editor Command',
-    action: async () => {
-      plugin.editor.insertPlainText('Hello World!');
-    },
-  });
-
-  // Show a toast notification to the user.
-  await plugin.app.toast("I'm a toast!");
-
-  // Register a sidebar widget.
-  await plugin.app.registerWidget('sample_widget', WidgetLocation.RightSidebar, {
-    dimensions: { height: 'auto', width: '100%' },
+    id: "shuffle-children",
+    name: "Shuffle Children or Selection",
+    quickCode: "sh",
+    keywords: "random, sort",
+    description:
+      "Random sort children of the current Rem or a group of selected Rems.",
+    // icon: `${plugin.rootURL}shuffle.svg`,
+    action: selectAndShuffle,
   });
 }
 

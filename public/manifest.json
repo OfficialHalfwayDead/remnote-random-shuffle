@@ -1,22 +1,21 @@
 {
+  "author": "HalfwayDead",
+  "name": "Random Shuffle Rems",
+  "description": "Allows you to shuffle children of a Rem in a random order, just like the base app supports for alphabetical order.",
+  "enableOnMobile": true,
+  "id": "HalfwayDead-dyto8hl",
   "manifestVersion": 1,
-  "id": "plugin_template",
-  "name": "Plugin Template",
-  "author": "remnote",
-  "repoUrl": "",
+  "repoUrl": "https://github.com/OfficialHalfwayDead/remnote-random-shuffle",
   "version": {
-    "major": 0,
+    "major": 1,
     "minor": 0,
-    "patch": 1
+    "patch": 0
   },
-  "theme": [],
-  "enableOnMobile": false,
-  "description": "",
   "requestNative": false,
   "requiredScopes": [
     {
       "type": "All",
-      "level": "Read"
+      "level": "ReadCreateModify"
     }
   ]
 }
